@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.utilities;
 
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
  */
 public class IntakeUtil {
     private final DcMotor intakeMotor;
+    private final CRServo intakeServo;
 
     /** The default hardware map name for the intake motor. */
     public static final String INTAKE_MOTOR_NAME = "intake";
@@ -27,6 +29,8 @@ public class IntakeUtil {
         intakeMotor = hardwareMap.get(DcMotor.class, INTAKE_MOTOR_NAME);
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
     }
 
 
@@ -44,6 +48,7 @@ public class IntakeUtil {
      */
     public void setIntakeMotorPower(double power) {
         intakeMotor.setPower(power);
+        intakeServo.setPower(-power);
     }
 
     /**
