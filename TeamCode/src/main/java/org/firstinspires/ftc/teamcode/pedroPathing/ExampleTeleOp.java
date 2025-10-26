@@ -1,17 +1,26 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static java.lang.Math.toDegrees;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.control.KalmanFilter;
+import com.pedropathing.control.KalmanFilterParameters;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.localization.PoseTracker;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+
 import java.util.function.Supplier;
 @Configurable
 @TeleOp
@@ -24,12 +33,18 @@ public class ExampleTeleOp extends OpMode {
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.5;
 
-    private Limelight3A camera; //any camera here
+    private Limelight3A limelight; //any camera here
 
     enum allianceColor {
         RED,
         BLUE
     }
+
+    private final KalmanFilterParameters kfParams = new KalmanFilterParameters(6,1); // todo: tune?
+
+    private final KalmanFilter xFilter =  new KalmanFilter(kfParams);
+    private final KalmanFilter yFilter = new KalmanFilter(kfParams);
+    private final KalmanFilter thetaFilter = new KalmanFilter(kfParams);
 
     // TODO: set this at init
     allianceColor alliance = allianceColor.RED;
@@ -37,10 +52,11 @@ public class ExampleTeleOp extends OpMode {
     @Override
     public void init() {
 
-        camera = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
         follower.update();
+
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
@@ -53,7 +69,7 @@ public class ExampleTeleOp extends OpMode {
         //In order to use float mode, add .useBrakeModeInTeleOp(true); to your Drivetrain Constants in Constant.java (for Mecanum)
         //If you don't pass anything in, it uses the default (false)
 
-        camera.start();
+        limelight.start();
         follower.startTeleopDrive();
     }
     @Override
@@ -97,7 +113,7 @@ public class ExampleTeleOp extends OpMode {
                 Pose robotPose = follower.getPose();
                 // calculate heading to goal
                 double headingToGoal = Math.atan2((goalPose.getY() - robotPose.getY()), (goalPose.getX() - robotPose.getX()));
-                // apply controls to teleopdrive w/ calculated heading (field relative)
+                // apply controls to teleop drive w/ calculated heading (field relative)
                 // turn is field relative
                 follower.turnTo(headingToGoal);
             }
@@ -128,5 +144,39 @@ public class ExampleTeleOp extends OpMode {
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive", automatedDrive);
+
+        //This uses the aprilTag to relocalize your robot
+        // poseTracker will apply the offset below to pose when getPose is called
+        PoseTracker poseTracker = follower.getPoseTracker();
+        Pose poseOffset = getRobotOffsetFromCamera();
+        poseTracker.setXOffset(poseOffset.getX());
+        poseTracker.setYOffset(poseOffset.getY());
+        poseTracker.setHeadingOffset(poseOffset.getHeading());
+    }
+    private Pose getRobotOffsetFromCamera() {
+        //get the camera
+        limelight.updateRobotOrientation(toDegrees(follower.getPoseTracker().getLocalizer().getIMUHeading()));
+        LLResult result = limelight.getLatestResult();
+        if (result != null && result.isValid()) {
+            // have a camera pose
+            Pose3D botPose_mt2 = result.getBotpose_MT2();
+
+            if (botPose_mt2 != null) {
+                // good bot pose
+                double x = botPose_mt2.getPosition().x;
+                double y = botPose_mt2.getPosition().y;
+                double theta = botPose_mt2.getOrientation().getYaw();
+                Pose botPose2d = new Pose(x, y, theta);
+
+                // get difference between vision bot pose and odo bot pose
+                Pose diff = follower.getPoseTracker().getRawPose().minus(botPose2d);
+
+                //kalman filter the difference between the vision and odometry
+                xFilter.update(diff.getX(), 0);
+                yFilter.update(diff.getX(), 0);
+                thetaFilter.update(diff.getHeading(), 0);
+            }
+        }
+        return new Pose(xFilter.getState(), yFilter.getState(), thetaFilter.getState());
     }
 }
