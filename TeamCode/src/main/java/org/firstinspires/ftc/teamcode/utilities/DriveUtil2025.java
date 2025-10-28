@@ -20,6 +20,7 @@ import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -89,7 +90,7 @@ public class DriveUtil2025 {
     private static final double ERROR_THRESHOLD = 10;
 
     // Class Members
-    private LinearOpMode myOpMode = null;
+    private OpMode myOpMode = null;
     public DcMotor leftFrontMotor;
     public DcMotor rightFrontMotor;
     public DcMotor leftRearMotor;
@@ -143,7 +144,7 @@ public class DriveUtil2025 {
     /* local OpMode members. */
     HardwareMap hardwareMap = null;
 
-    public DriveUtil2025(LinearOpMode opmode) {
+    public DriveUtil2025(OpMode opmode) {
         myOpMode = opmode;
 
     }

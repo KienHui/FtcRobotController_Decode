@@ -29,15 +29,11 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.utilities.DriveUtil2025;
-import org.firstinspires.ftc.teamcode.utilities.IntakeUtil;
 
 
 @TeleOp(name="Basic: Linear OpMode2", group="Linear OpMode")
@@ -48,7 +44,6 @@ public class BasicOpMode_Linear extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DriveUtil2025 drive;
-    private IntakeUtil intake;
 
 
     @Override
@@ -68,7 +63,6 @@ public class BasicOpMode_Linear extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             doDriveControls();
-            doIntakeControls();
             doTelemetry();
 
         }
@@ -81,47 +75,19 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
     }
 
-    private void doIntakeControls() {
-        if(gamepad1.right_bumper){
-            intake.setIntakeMotorPower(-1);
 
-        } else if (gamepad1.left_bumper){
-            intake.setIntakeMotorPower(1);
-        } else {
-            intake.setIntakeMotorPower(0);
-
-        }
-    }
 
     private void doDriveControls() {
-        // Get gamepad inputs
-//            double driveInput = -gamepad1.left_stick_y; // Forward/Backward (often inverted)
-//            double strafeInput = gamepad1.left_stick_x; // Strafe Left/Right
-//            double turnInput = gamepad1.right_stick_x;  // Turn Left/Right
-        double rawLeftStickY = gamepad1.left_stick_y; // Forward/Backward
-        double rawLeftStickX = gamepad1.left_stick_x;  // Strafe
-        double rawRightStickX = gamepad1.right_stick_x; // Turn
-        // Apply deadzone first (optional but recommended)
-        double deadzone = 0.1;
-        rawLeftStickY = Math.abs(rawLeftStickY) < deadzone ? 0 : rawLeftStickY;
-        rawLeftStickX = Math.abs(rawLeftStickX) < deadzone ? 0 : rawLeftStickX;
-        rawRightStickX = Math.abs(rawRightStickX) < deadzone ? 0 : rawRightStickX;
-
-// Apply scaling (e.g., squaring)
-        double scaledDriveInput = Math.copySign(rawLeftStickY * rawLeftStickY, rawLeftStickY);
-        double scaledStrafeInput = Math.copySign(rawLeftStickX * rawLeftStickX, rawLeftStickX);
-        double scaledTurnInput = Math.copySign(rawRightStickX * rawRightStickX, rawRightStickX);
-
 // Use scaled inputs for driving
-        drive.arcadeDrive(scaledStrafeInput, scaledDriveInput, scaledTurnInput, gamepad1.right_stick_y, DRIVE_SPEED);
+        drive.arcadeDrive(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x, gamepad1.right_stick_y, DRIVE_SPEED);
 
         //drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 
     }
 
+
     private void initializeHardware() throws InterruptedException {
         Thread.sleep(250); //give enough time to initialize and set light colors
         drive.init(hardwareMap,telemetry); //initialize the drive subsystem
-        intake = new IntakeUtil(hardwareMap);
     }
 }

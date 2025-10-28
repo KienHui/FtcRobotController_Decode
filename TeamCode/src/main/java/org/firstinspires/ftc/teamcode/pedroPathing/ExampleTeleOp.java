@@ -79,7 +79,7 @@ public class ExampleTeleOp extends OpMode {
         Pose goalPose;
         //Call this once per loop
         follower.update();
-        telemetryM.update();
+        telemetry.update();
         if (!automatedDrive) {
             //Make the last parameter false for field-centric
             //In case the drivers want to use a "slowMode" you can scale the vectors
