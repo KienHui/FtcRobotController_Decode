@@ -62,18 +62,10 @@ public class BasicOpMode_Linear1 extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             // Get gamepad inputs
-            double driveInput = gamepad1.left_stick_y; // Forward/Backward (often inverted)
-            double strafeInput = gamepad1.left_stick_x; // Strafe Left/Right
-            double turnInput = gamepad1.right_stick_x;  // Turn Left/Right
-
-
-            drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
+            drive.arcadeDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x, gamepad1.right_stick_y, DRIVE_SPEED);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-//            telemetry.addData("Left Stick X", "%.2f", driveInput);
-//            telemetry.addData("Left Stick Y", "%.2f", strafeInput);
-//            telemetry.addData("Right Stick X", "%.2f", turnInput);            telemetry.update();
         }
     }
     private void initializeHardware() throws InterruptedException {
