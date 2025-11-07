@@ -10,7 +10,9 @@ import static java.lang.Math.toDegrees;
 
 import com.pedropathing.control.KalmanFilter;
 import com.pedropathing.control.KalmanFilterParameters;
+import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.CoordinateSystem;
 import com.pedropathing.localization.PoseTracker;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
@@ -1555,7 +1557,7 @@ public class DriveUtil2025 {
 
     }
 
-    private void updateRobotPoseOffsetFromLimeLight() {
+    public void updateRobotPoseOffsetFromLimeLight() {
         //get the camera
         limelight.updateRobotOrientation(toDegrees(follower.getPoseTracker().getIMUHeadingEstimate()));
         LLResult result = limelight.getLatestResult();
@@ -1569,7 +1571,7 @@ public class DriveUtil2025 {
                 double x = botPose_mt2.getPosition().x;
                 double y = botPose_mt2.getPosition().y;
                 double theta = botPose_mt2.getOrientation().getYaw();
-                Pose botPose2d = new Pose(x, y, theta);
+                Pose botPose2d = new Pose(x, y, theta, FTCCoordinates.INSTANCE);
 
                 // get difference between vision bot pose and odo bot pose
                 Pose diff = follower.getPoseTracker().getRawPose().minus(botPose2d);
